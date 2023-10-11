@@ -1,0 +1,58 @@
+<!-- public/userAPP.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breast Cancer Diagnosis App</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Breast Cancer Diagnosis App</h1>
+    <div class="form-container">
+        <label for="gene-vector-file">Upload Gene Vector (CSV):</label>
+        <input type="file" id="gene-vector-file" accept=".csv">
+        <label for="model-file">Upload Model File:</label>
+        <input type="file" id="model-file" accept=".h5"> <!-- Accept .h5 model files -->
+        <button id="diagnose-btn">Diagnose</button>
+    </div>
+    <div id="result-container">
+        <h2>Nottingham Prognostic Index (NPI):</h2>
+        <p id="npi-result"></p>
+    </div>
+    <script>
+        console.log('Script loaded');
+        const diagnoseButton = document.getElementById('diagnose-btn');
+        const geneVectorFileInput = document.getElementById('gene-vector-file'); // Updated id to match your HTML
+        const npiResultElement = document.getElementById('npi-result');
+
+        diagnoseButton.addEventListener('click', () => {
+            console.log('Diagnose button clicked');
+            const file = geneVectorFileInput.files[0];
+
+            if (!file) {
+                alert('Please select a CSV file.');
+                return;
+            }
+
+            // Create a FormData object to send the file
+            const formData = new FormData();
+            formData.append('geneVectorFile', file);
+
+            // Make a POST request to the server to trigger the diagnosis
+            fetch('/executeScript', { // Updated endpoint to match your Express.js route
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => response.text())
+            .then(result => {
+                npiResultElement.textContent = result;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        });
+    </script>
+    
+</body>
+</html>

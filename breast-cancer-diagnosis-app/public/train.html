@@ -1,0 +1,63 @@
+<!-- public/train.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Model Training</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Model Training</h1>
+    <div class="form-container">
+        <label for="epochs">Epochs:</label>
+        <input type="number" id="epochs" value="10">
+        <label for="batch-size">Batch Size:</label>
+        <input type="number" id="batch-size" value="32">
+        <button id="train-btn">Train</button>
+    </div>
+    <div id="result-container">
+        <h2>Model Performance Parameters</h2>
+        <p id="performance-params"></p>
+    </div>
+    <script>
+        console.log('Script loaded');
+        const trainButton = document.getElementById('train-btn');
+        const epochsInput = document.getElementById('epochs');
+        const batchSizeInput = document.getElementById('batch-size');
+        const performanceParamsElement = document.getElementById('performance-params');
+
+        trainButton.addEventListener('click', async () => {
+        console.log('Train button clicked');
+        const epochs = epochsInput.value;
+        const batchSize = batchSizeInput.value;
+
+        // Make a POST request to the server to trigger model training
+        const response = await fetch('/trainModel', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ epochs, batchSize }),
+        });
+
+        if (response.ok) {
+            // Make another request to get the model performance parameters
+            const performanceResponse = await fetch('/performance');
+
+            if (performanceResponse.ok) {
+                const performanceParams = await performanceResponse.json();
+                const paramsString = JSON.stringify(performanceParams, null, 2);
+                performanceParamsElement.textContent = paramsString;
+            } else {
+                console.error('Error:', performanceResponse.statusText);
+                performanceParamsElement.textContent = 'Error occurred fetching performance parameters.';
+            }
+        } else {
+            console.error('Error:', response.statusText);
+            performanceParamsElement.textContent = 'Error occurred during training.';
+        }
+    });
+</script>
+</body>
+</html>

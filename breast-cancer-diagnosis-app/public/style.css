@@ -1,0 +1,29 @@
+/* public/style.css */
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+}
+
+.form-container {
+    margin-top: 20px;
+}
+
+label {
+    font-weight: bold;
+}
+
+textarea {
+    width: 100%;
+}
+
+button {
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    cursor: pointer;
+}
+
+#result-container {
+    margin-top: 20px;
+}

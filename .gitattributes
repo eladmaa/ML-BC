@@ -1,0 +1,4 @@
+model/venv filter=lfs diff=lfs merge=lfs -text
+mode/venv/* filter=lfs diff=lfs merge=lfs -text
+model/venv/* filter=lfs diff=lfs merge=lfs -text
+model/venv.zip filter=lfs diff=lfs merge=lfs -text
