@@ -207,14 +207,31 @@ app.post('/executeScript', requireAuth, async (req, res) => {
             const predictionsFilePath = path.join(__dirname, 'model', 'predictions.json');
 
             try {
+                const predictionsFilePath = path.join(__dirname, 'model', 'predictions.json');
+                const modelPerformFilePath = path.join(__dirname, 'model', 'model_perform.json');
+
                 
-                const predictionsData = await fs.promises.readFile(predictionsFilePath, 'utf8');
+                // const predictionsData = await fs.promises.readFile(predictionsFilePath, 'utf8');
                 console.log('Sending predictions as a response');
-                res.send(predictionsData);
+
+                const [predictionsData, modelPerformData] = await Promise.all([
+                    fs.promises.readFile(predictionsFilePath, 'utf8'),
+                    fs.promises.readFile(modelPerformFilePath, 'utf8'),
+                ]);
+                const predictions = JSON.parse(predictionsData);
+                const modelPerformance = JSON.parse(modelPerformData);
+
+                // Create an object to send both predictions and model performance
+                const results = {
+                    predictions,
+                    modelPerformance,
+                };
+                res.send(results);
             } catch (err) {
                 console.error(`Error reading predictions file: ${err}`);
                 res.status(500).send(err);
             }
+            
         } catch (error) {
             console.error('Error executing Python process:', error);
             res.status(500).send(`Error executing Python process: ${error.message}`);

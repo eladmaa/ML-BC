@@ -17,42 +17,53 @@
         <button id="diagnose-btn">Diagnose</button>
     </div>
     <div id="result-container">
-        <h2>Nottingham Prognostic Index (NPI):</h2>
+        <!-- <h2>Nottingham Prognostic Index (NPI):</h2> -->
         <p id="npi-result"></p>
+        <!-- <h2>Accuracy:</h2> -->
+        <p id="results-accuracy"></p>
     </div>
     <script>
         console.log('Script loaded');
         const diagnoseButton = document.getElementById('diagnose-btn');
         const geneVectorFileInput = document.getElementById('gene-vector-file'); // Updated id to match your HTML
         const npiResultElement = document.getElementById('npi-result');
+        const performanceParamsElement = document.getElementById('results-accuracy');
 
         diagnoseButton.addEventListener('click', () => {
-            console.log('Diagnose button clicked');
-            const file = geneVectorFileInput.files[0];
+    console.log('Diagnose button clicked');
+    const file = geneVectorFileInput.files[0];
 
-            if (!file) {
-                alert('Please select a CSV file.');
-                return;
-            }
+    if (!file) {
+        alert('Please select a CSV file.');
+        return;
+    }
 
-            // Create a FormData object to send the file
-            const formData = new FormData();
-            formData.append('geneVectorFile', file);
+    // Create a FormData object to send the file
+    const formData = new FormData();
+    formData.append('geneVectorFile', file);
 
-            // Make a POST request to the server to trigger the diagnosis
-            fetch('/executeScript', { // Updated endpoint to match your Express.js route
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.text())
-            .then(result => {
-                npiResultElement.textContent = result;
-            })
-            .catch(error => {
-                console.error('Error:', error);
-            });
-        });
+    // Make a POST request to the server to trigger the diagnosis
+    fetch('/executeScript', {
+        method: 'POST',
+        body: formData,
+    })
+    .then(response => response.json()) // Parse the response as JSON
+    .then(data => {
+        // Display the predictions and model performance data
+        const predictionsString = JSON.stringify(data.predictions, null, 2);
+        const modelPerformString = JSON.stringify(data.modelPerformance, null, 2);
+
+        performanceParamsElement.innerHTML = `
+            <h2>Nottingham Prognostic Index (NPI):</h2>
+            <pre>${predictionsString}</pre>
+            <h2>Model Accuracy:</h2>
+            <pre>${modelPerformString}</pre>
+        `;
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+});
     </script>
-    
 </body>
 </html>

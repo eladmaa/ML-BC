@@ -17,6 +17,7 @@ tensorflow
 scikeras
 joblib
 pandas
+matplotlib
 '''
 import sys
 import json
@@ -29,6 +30,30 @@ from keras.layers import Dense
 import pandas as pd
 import tensorflow as tf
 from sklearn.metrics import mean_squared_error, mean_absolute_error
+import matplotlib.pyplot as plt
+import numpy as np
+from keras.models import load_model
+
+
+def plotModel(history):
+    """
+    param: history - a trained keras model history
+    produces plots and saves them to a file
+    """
+    print("inside plotModel")
+    train_loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    plt.figure(figsize=(10, 5))
+    plt.plot(train_loss, label='Training Loss')
+    plt.plot(val_loss, label='Validation Loss')
+    plt.xlabel('Epoch')
+    plt.ylabel('Loss')
+    plt.legend()
+    plt.title('Training and Validation Loss')
+    plt.savefig('./model/plot.png')
+    with open('./model/plot.png', 'rb') as img_file:
+        image_data = img_file.read()
+    # plt.show()
 
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -56,23 +81,14 @@ def train_model(save_model_path, epochs, batch_size):
     X_train = scaler.transform(X_train)
     X_test = scaler.transform(X_test)
 
-    # Perform PCA to cover 95% of variance
-    #pca = PCA(n_components=0.95, random_state=42)
-    #X_train_pca = pca.fit_transform(X_train)
-    #X_test_pca = pca.transform(X_test)
-
-    # Create and compile the Keras model
     model = create_model(X_train.shape[1])
 
     # Train the model on your data
-    model.fit(X_train, y_train, epochs=10, batch_size=32, verbose=0)
+# Train the model on your data
+    history = model.fit(X_train, y_train, epochs=epochs, batch_size=batch_size, verbose=0, validation_data=(X_test, y_test))
     accuracy = model.evaluate(X_test, y_test)
     print(f"Model Accuracy: {accuracy:.4f}")
 
-
-    # Evaluate the model on the test set
-    #loss, accuracy = model.evaluate(X_test_pca, y_test)
-    # Evaluate the model using regression metrics
     predictions = model.predict(X_test)  #X_test_pca
     mse = mean_squared_error(y_test, predictions)
     mae = mean_absolute_error(y_test, predictions)
@@ -94,6 +110,7 @@ def train_model(save_model_path, epochs, batch_size):
     # Serialize the dictionary to JSON and write it to the file
     with open(output_json_file, 'w') as json_file:
         json.dump(performance_data, json_file)
+    plotModel(history)
     return 0
 
 def main(option, gene_expression_file, save_model_path, epochs=10, batch_size=32):
@@ -101,7 +118,7 @@ def main(option, gene_expression_file, save_model_path, epochs=10, batch_size=32
 
     if option == '1':
         # Load the existing model
-        model = tf.keras.models.load_model(save_model_path)
+        model = load_model(save_model_path)
         scaler = joblib.load('./model/scaler.pkl')
         genes = pd.read_csv(gene_expression_file)
         #X = genes[['brca1': 'ugt2b7']].values
@@ -110,7 +127,7 @@ def main(option, gene_expression_file, save_model_path, epochs=10, batch_size=32
         prediction = model.predict(X_scaled)
         # Specify an absolute path for predictions.json
         predictions_file_path = os.path.abspath('./model/predictions.json')
-
+        # accuracy = model.evaluate(X_test, y_test)
         # Create and write the predictions to the absolute path
         with open(predictions_file_path, 'w') as predictions_file:
             json.dump(prediction.flatten().tolist(), predictions_file)

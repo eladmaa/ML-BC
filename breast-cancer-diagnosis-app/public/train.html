@@ -19,45 +19,77 @@
     <div id="result-container">
         <h2>Model Performance Parameters</h2>
         <p id="performance-params"></p>
+        <img id="plot-image">
+
     </div>
+    <input type="file" id="model-file-input" accept=".h5" style="display: none;">
     <script>
         console.log('Script loaded');
         const trainButton = document.getElementById('train-btn');
         const epochsInput = document.getElementById('epochs');
         const batchSizeInput = document.getElementById('batch-size');
         const performanceParamsElement = document.getElementById('performance-params');
+        const modelFileInput = document.getElementById('model-file-input');
 
-        trainButton.addEventListener('click', async () => {
-        console.log('Train button clicked');
-        const epochs = epochsInput.value;
-        const batchSize = batchSizeInput.value;
+        async function saveModel(modelData) {
+            const handle = await modelFileInput.files[0];
 
-        // Make a POST request to the server to trigger model training
-        const response = await fetch('/trainModel', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({ epochs, batchSize }),
-        });
-
-        if (response.ok) {
-            // Make another request to get the model performance parameters
-            const performanceResponse = await fetch('/performance');
-
-            if (performanceResponse.ok) {
-                const performanceParams = await performanceResponse.json();
-                const paramsString = JSON.stringify(performanceParams, null, 2);
-                performanceParamsElement.textContent = paramsString;
-            } else {
-                console.error('Error:', performanceResponse.statusText);
-                performanceParamsElement.textContent = 'Error occurred fetching performance parameters.';
+            if (!handle) {
+                alert('Please select a file location to save the model.');
+                return;
             }
-        } else {
-            console.error('Error:', response.statusText);
-            performanceParamsElement.textContent = 'Error occurred during training.';
+
+            const writableStream = await handle.createWritable();
+            await writableStream.write(modelData);
+            await writableStream.close();
+
+            alert('Model saved successfully.');
         }
-    });
-</script>
+
+        // Event listener for the "Train" button
+        trainButton.addEventListener('click', async () => {
+            console.log('Train button clicked');
+            const epochs = epochsInput.value;
+            const batchSize = batchSizeInput.value;
+        
+
+            // Make a POST request to the server to trigger model training
+            const response = await fetch('/trainModel', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ epochs, batchSize }),
+            });
+
+            if (response.ok) {
+                // Make another request to get the model performance parameters
+                const performanceResponse = await fetch('/performance');
+                const imgElement = document.getElementById('plot-image');
+
+
+                if (performanceResponse.ok) {
+                    const performanceParams = await performanceResponse.json();
+                    const paramsString = JSON.stringify(performanceParams, null, 2);
+                    performanceParamsElement.textContent = paramsString;
+                    alert('Model saved successfully. file name: saved_model.h5');
+                    // Trigger the file input to let the user choose where to save the model
+                    // modelFileInput.click();
+                    imgElement.src = 'plot.png';
+                    // Pass the model data to the saveModel function when the file input changes
+                    // modelFileInput.addEventListener('change', async () => {
+                    //     const modelData = 'your_model_data_here'; // Replace with the actual model data
+                    //     saveModel(modelData);
+                    // });
+                } else {
+                    console.error('Error:', performanceResponse.statusText);
+                    performanceParamsElement.textContent = 'Error occurred fetching performance parameters.';
+                }
+            } else {
+                console.error('Error:', response.statusText);
+                performanceParamsElement.textContent = 'Error occurred during training.';
+            }
+        });
+    </script>
 </body>
 </html>
